@@ -4,13 +4,33 @@ import holidays
 import pandas as pd
 import icalendar
 
+# Set Streamlit page config
+st.set_page_config(
+    page_title="World Holidays to ICS App",
+    page_icon="📆",
+    layout="centered",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://www.extremelycoolapp.com/help',
+        'Report a bug': "https://github.com/Karlosll91/holidays_to_ics/issues",
+    }
+)
+
+# Show greetings
+with st.sidebar:
+    st.title("About")
+    st.write("This app allows you to export the holidays of a country to an .ICS file to add them to your calendar")
+    st.write("You can also import an existing .ICS file to see the events in it")
+    st.write("The app is based on the incredible holidays package: https://github.com/vacanza/python-holidays")
+    st.write("Created by KL 2023")
+
+
 # Get the list of available countries
 available_countries = [re.sub(r"(\w)([A-Z])", r"\1 \2", value[0]) for key, value in holidays.registry.COUNTRIES.items()]
 
 # Create the Streamlit app
 def main():
     st.title("World Holidays to Calendar")
-    st.subheader("Export holidays to your calendar as an .ICS file")
 
     # Select action
     action = st.selectbox("", ["Select one action...", "Generate new calendar", "Load existing calendar"])
@@ -97,8 +117,12 @@ def export_calendar(holiday_list, country=""):
 def display_calendar(holiday_list, country="", year=""):
     # Display the holidays stats
     st.subheader("Holidays stats:")
-    st.write("Number of holidays:", len(holiday_list))
-    st.write("Number of working days:", 365 - len(holiday_list))
+    if len(holiday_list) > 0:
+        st.write("Number of holidays:", len(holiday_list))
+        year = holiday_list["start_time"].iloc[0].strftime("%Y")
+        total_days = 366 if pd.Timestamp(year).is_leap_year else 365
+        
+        st.write("Number of working days:", total_days - len(holiday_list))
 
     # Display a plot of the sum of holidays by month sorted by month number
     # from calendar import month_name
@@ -157,7 +181,7 @@ if __name__ == "__main__":
     main()
     
     # Show greetings
-    st.divider()
-    st.subheader("About")
-    st.write("Created by KL 2023")
-    st.write("Thanks to the incredible holidays package: https://github.com/vacanza/python-holidays")
+    # st.divider()
+    # st.subheader("About")
+    # st.write("Created by KL 2023")
+    # st.write("Thanks to the incredible holidays package: https://github.com/vacanza/python-holidays")
