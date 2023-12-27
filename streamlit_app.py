@@ -136,7 +136,7 @@ def display_calendar(holiday_list, country="", year=""):
                         #    column_config={"Date": {"width": 20}, "Holiday": {"width": 400}}
                         )
     
-    holiday_list_mod
+    # holiday_list_mod
 
     if country != "":
         # Export holidays to ICS file
