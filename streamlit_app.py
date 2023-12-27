@@ -10,13 +10,13 @@ available_countries = [re.sub(r"(\w)([A-Z])", r"\1 \2", value[0]) for key, value
 # Create the Streamlit app
 def main():
     st.title("World Holidays to Calendar")
-    st.subheader("Export holidays to your calendar in a ICS file")
+    st.subheader("Export holidays to your calendar as an .ICS file")
 
     # Select action
-    action = st.selectbox("Action", ["Select one action", "Generate calendar", "Load calendar"])
-    if action == "Generate calendar":
+    action = st.selectbox("", ["Select one action...", "Generate new calendar", "Load existing calendar"])
+    if action == "Generate new calendar":
         generate_calendar()
-    elif action == "Load calendar":
+    elif action == "Load existing calendar":
         load_calendar()
     
 def parse_ics(ics):
@@ -27,9 +27,7 @@ def parse_ics(ics):
         if component.name == "VEVENT":
             event = {
                 'start_time': component.get('dtstart').dt,
-                'summary': component.get('summary'),
-                # 'end_time': component.get('dtend').dt,
-                # 'description': component.get('description')
+                'summary': component.get('summary')
             }
             events.append(event)
     events = pd.DataFrame(events)
@@ -85,7 +83,7 @@ def generate_calendar():
 
 def export_calendar(holiday_list, country=""):
     # Generate ICS file
-    ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//KLSoft-HolidayExporter//EN\nCALSCALE:GREGORIAN\n"
+    ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//KL-HolidayToICS//EN\nCALSCALE:GREGORIAN\n"
     for index, row in holiday_list.iterrows():
         ics += "BEGIN:VEVENT\n"
         ics += "DTSTART;VALUE=DATE:" + row["start_time"].strftime("%Y%m%d") + "\n"
@@ -126,19 +124,21 @@ def display_calendar(holiday_list, country="", year=""):
     # Display the holidays
     st.subheader("Holidays:")
     holiday_list = holiday_list.reset_index(drop=True)
-    holiday_list_mod = st.data_editor(holiday_list, 
-                        hide_index=True, 
-                        use_container_width=True,
-                        num_rows="dynamic",
-                        key="holiday_list_mod",
-                        height=len(holiday_list)*40,
-                        #    disabled=["Index"],
-                        #    column_config={"Date": {"width": 20}, "Holiday": {"width": 400}}
-                        )
     
-    # holiday_list_mod
-
-    if country != "":
+    if country == "":
+        st.dataframe(holiday_list, height=len(holiday_list)*40)
+    else:
+        st.text("You can edit or delete the holidays in the table below, even add new ones")
+        holiday_list_mod = st.data_editor(holiday_list, 
+                            hide_index=True, 
+                            use_container_width=True,
+                            num_rows="dynamic",
+                            key="holiday_list_mod",
+                            height=len(holiday_list)*40,
+                            #    disabled=["Index"],
+                            #    column_config={"Date": {"width": 20}, "Holiday": {"width": 400}}
+                            )
+    
         # Export holidays to ICS file
         st.subheader("Export:")
         st.write("Export holidays to a ICS file to add them to your calendar")
@@ -155,3 +155,9 @@ def display_calendar(holiday_list, country="", year=""):
 
 if __name__ == "__main__":
     main()
+    
+    # Show greetings
+    st.divider()
+    st.subheader("About")
+    st.write("Created by KL 2023")
+    st.write("Thanks to the incredible holidays package: https://github.com/vacanza/python-holidays")
