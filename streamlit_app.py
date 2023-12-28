@@ -3,6 +3,22 @@ import streamlit as st
 import holidays
 import pandas as pd
 import icalendar
+import datetime
+
+# Sunday counter
+def count_sundays(year: int):
+    sundays = 0
+    for month in range(1, 13):  # for each month in the year
+        # loop through the days of the month
+        for day in range(1, 32):
+            try:
+                # check if it is a Sunday
+                if datetime.datetime(year, month, day).weekday() == 6:
+                    sundays += 1
+            except ValueError:
+                # if not, it must be out of range for this month
+                break
+    return sundays
 
 # Set Streamlit page config
 st.set_page_config(
@@ -118,11 +134,13 @@ def display_calendar(holiday_list, country="", year=""):
     # Display the holidays stats
     st.subheader("Holidays stats:")
     if len(holiday_list) > 0:
-        st.write("Number of holidays:", len(holiday_list))
         year = holiday_list["start_time"].iloc[0].strftime("%Y")
         total_days = 366 if pd.Timestamp(year).is_leap_year else 365
-        
-        st.write("Number of working days:", total_days - len(holiday_list))
+        st.write(f"Total days for {year}:", total_days)
+        st.write("Number of holidays:", len(holiday_list))
+        total_sundays = count_sundays(int(year))
+        st.write("Number of Sundays:", total_sundays)
+        st.write("Number of working days:", total_days - len(holiday_list) - total_sundays)
 
     # Display a plot of the sum of holidays by month sorted by month number
     # from calendar import month_name
@@ -149,6 +167,12 @@ def display_calendar(holiday_list, country="", year=""):
     st.subheader("Holidays:")
     holiday_list = holiday_list.reset_index(drop=True)
     
+    # Add Day of the week column
+    holiday_list["start_time_code"] = pd.to_datetime(holiday_list["start_time"])
+    holiday_list["Day"] = holiday_list["start_time_code"].dt.day_name()
+    holiday_list = holiday_list.drop(columns=["start_time_code"])
+
+    
     if country == "":
         st.dataframe(holiday_list, height=len(holiday_list)*40)
     else:
@@ -168,6 +192,8 @@ def display_calendar(holiday_list, country="", year=""):
         st.write("Export holidays to a ICS file to add them to your calendar")
 
         if st.button("Generate ICS file"):
+            # Drop the Day column
+            holiday_list_mod = holiday_list_mod.drop(columns=["Day"])
             st.success("ICS file generated")
             # Download ICS file
             st.download_button(
